@@ -1,7 +1,6 @@
-// Initializing the page and calling the other functions
 function startup() {
 
-    // Grabbing the dropdown element
+    // Dropdown
     var selector = d3.select('#selDataset');
 
     d3.json("samples.json").then(function(samplesData){
@@ -14,34 +13,27 @@ function startup() {
             .attr('value', d => d)
             .text(d => d);
 
-        // Take in the first name upon loading the page
         var starter = names[0];
 
-        // Call other functions using starter name
         buildPlots(starter);
         demographics(starter);
 
     }).catch(error => console.log(error));
 };
 
-// Dynamic changing of plots and demographics upon change in dropdown
+// Demographics Dropdown
 function optionChanged(newID){
     buildPlots(newID);
     demographics(newID);
 };
 
-// Building Bar Chart and Bubble Chart
+// Bar Chart and Bubble Chart
 function buildPlots(id) {
-    // Reading in the json dataset
     d3.json("samples.json").then(function(samplesData){
-        // console.log(samplesData);
-        // Filtering for the id selected
+        // console.log(samplesData)/filter
         var filtered = samplesData.samples.filter(sample => sample.id == id);
         var result = filtered[0];
-        // console.log(filtered)
-        // console.log(result)
-
-        // creating variables and storing the top 10 in an array
+        // console.log(filtered) (result)
 
         Data = [];
         for (i=0; i<result.sample_values.length; i++){
@@ -51,21 +43,20 @@ function buildPlots(id) {
                 label: result.otu_labels[i]
             });
         }
-        // console.log(Data);
+        // console.log(Data)
 
-        // Sorting the data and slicing for top10
         var Sorted = Data.sort(function sortFunction(a,b){
             return b.value - a.value;
         }).slice(0,10);
         // console.log(Sorted)
 
-        // Since horizontal bar chart, need to reverse to display from top to bottom in descending order
+        // Order of data
         var reversed = Sorted.sort(function sortFunction(a,b){
             return a.value - b.value;
         })
-        // console.log(reversed);
+        // console.log(reversed)
 
-        // Trace for Horizontal Bar Chart
+        // Horizontal Bar Chart
         var colors = ['#00bcf2', '#00bcf2', '#00bcf2', '#00bcf2', '#00bcf2', '#00bcf2', '#00bcf2', '#00bcf2', '#00bcf2', '#00bcf2']
         var traceBar = {
             type: "bar",
@@ -89,7 +80,6 @@ function buildPlots(id) {
             height: 400
           };
         
-        // Creating the Horizontal Bar Chart
         Plotly.newPlot("bar", Bardata, Barlayout);
 
         // Bubble Chart
@@ -100,7 +90,7 @@ function buildPlots(id) {
             marker: {
                 size: result.sample_values,
                 color: result.otu_ids,
-                colorscale: 'Jet'
+                colorscale: 'Picnic'
             },
             text: result.otu_labels
         };
@@ -114,32 +104,27 @@ function buildPlots(id) {
             width: window.width
         };
 
-        // Creating Bubble Chart
         Plotly.newPlot('bubble', Bubbledata, Bubblelayout);
 
     }).catch(error => console.log(error));
 }
 
-// Cleaning up the demographic keys
+// Demographics
 function proper(str){
     return str.toLowerCase().split(' ').map(letter => {
         return (letter.charAt(0).toUpperCase() + letter.slice(1));
     }).join(' ');
 }
 
-// Demographics
 function demographics(id) {
-    // To build the demographics section we need to import the data again
     d3.json('samples.json').then(function(samplesData){
         var filtered = samplesData.metadata.filter(sample => sample.id == id);
         
-        // Selecting the meta-data id on the html page
         var selection = d3.select('#sample-metadata');
 
-        // Clear any data already present
         selection.html('');
 
-        // Appending data extracted into the panel
+        // Append data
         Object.entries(filtered[0]).forEach(([k,v]) => {
             // console.log(k,v)
             selection.append('h5')
@@ -147,14 +132,13 @@ function demographics(id) {
         });
 
         
-        // Gauge Chart is easier to do it with demographics as the wash frequency is found under metadata
+        // Bonus
         var traceGauge = {
             type: 'indicator',
             mode: 'gauge+number',
             title: {
                 text: `<span style='font-size:0.6em; color:#009e492'><b>Belly Button Washing Frequency</span>`
             },
-            subtitle: {text: `Scrubs per week`},
             domain: {
                 x: [0,5],
                 y: [0,1]
@@ -187,7 +171,7 @@ function demographics(id) {
             margin: {t: 25, r:10, l:25, b:25}
         };
 
-        // Creating Gauge Chart
+        // Gauge Chart
         Plotly.newPlot('gauge', Gaugedata, Gaugelayout);
     }).catch(error => console.log(error));
 }
